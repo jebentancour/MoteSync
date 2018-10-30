@@ -12,6 +12,7 @@ Actualizar el GitHub:
 
 ```
 cd /home/user/contiki
+git config --global user.email federico.maximiliano.diaz@fing.edu.uy
 git fetch origin
 git pull origin master
 ```
@@ -45,7 +46,7 @@ sudo make login MOTES=/dev/ttyUSB0
 ```
 
 ```
-make 02-led-and-button BOARD=remote-revb NODEID=0x0014
-sudo make 02-led-and-button.upload MOTES=/dev/ttyUSB0
+make 02-led-and-button BOARD=remote-revb 
+sudo make 02-led-and-button.upload MOTES=/dev/ttyUSB0 NODEID=0x0014
 sudo make login MOTES=/dev/ttyUSB0
 ```
