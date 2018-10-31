@@ -68,6 +68,6 @@ En el project-conf poner:
 
 # Pines
 
-![Remote-revB](remote.jpg)
+![Remote-revB](remote.png)
 
-![Pines ADC](pines.jpg)
+![Pines ADC](pines.png)
