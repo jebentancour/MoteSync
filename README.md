@@ -61,6 +61,7 @@ En el project-conf poner:
 #define CC1200_CONF_USE_GPIO2       1
 #define CC1200_CONF_USE_RX_WATCHDOG 0
 #define ANTENNA_SW_SELECT_DEF_CONF  ANTENNA_SW_SELECT_SUBGHZ
+#define RPL_MRHOF_CONF_MAX_LINK_METRIC 10000
 ```
 
 [Zolertia Getting Started](https://github.com/Zolertia/Resources/wiki/Getting-Started-with-Zolertia-products)
