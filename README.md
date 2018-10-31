@@ -65,3 +65,9 @@ En el project-conf poner:
 ```
 
 [Zolertia Getting Started](https://github.com/Zolertia/Resources/wiki/Getting-Started-with-Zolertia-products)
+
+# Pines
+
+![Remote-revB](remote.jpg)
+
+![Pines ADC](pines.jpg)
