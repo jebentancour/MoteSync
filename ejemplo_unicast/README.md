@@ -1,4 +1,4 @@
-#Readme
+Readme 
 
 El archivo compilar.sh es un bash script. Si lo ponen en la misma carpeta que el resto del codigo y lo corren deberia de compilar receiver y sender.
 
