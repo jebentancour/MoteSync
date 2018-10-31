@@ -54,7 +54,7 @@ sudo make login MOTES=/dev/ttyUSB0
 ## Cambiar la radio
 En el project-conf poner:
 
-```
+```c
 #undef  NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO         cc1200_driver
 #define NETSTACK_CONF_RDC           nullrdc_driver
@@ -63,4 +63,4 @@ En el project-conf poner:
 #define ANTENNA_SW_SELECT_DEF_CONF  ANTENNA_SW_SELECT_SUBGHZ
 ```
 
-https://github.com/Zolertia/Resources/wiki/Getting-Started-with-Zolertia-products
+[Zolertia Getting Started](https://github.com/Zolertia/Resources/wiki/Getting-Started-with-Zolertia-products)
