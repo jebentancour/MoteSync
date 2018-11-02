@@ -1,6 +1,6 @@
 all: sender receiver
 
-CONTIKI = /home/$(USER)/contiki
+CONTIKI = /home/user/contiki
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
 # Linker optimizations

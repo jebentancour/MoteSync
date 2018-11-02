@@ -20,6 +20,20 @@
 
 #define UDP_PORT 1234
 
+#include "data.h"
+
+struct my_node_t {
+  uint8_t event_valid;
+  uint8_t id;
+  int16_t x_pos;
+  int16_t y_pos;
+  uint16_t event_asn;
+  uint16_t event_offset;
+};
+
+static struct my_node_t my_nodes[8];
+static uint8_t node_count;
+
 static struct simple_udp_connection unicast_connection;
 /*---------------------------------------------------------------------------*/
 PROCESS(node_process, "RPL Node");
@@ -133,8 +147,54 @@ receiver(struct simple_udp_connection *c,
 {
   printf("Data received from ");
   uip_debug_ipaddr_print(sender_addr);
-  printf(" on port %d from port %d with length %d: '%s'\n",
-         receiver_port, sender_port, datalen, data);
+  printf(" on port %d from port %d with length %d.\n",
+         receiver_port, sender_port, datalen);
+	
+	/*-------------------------------------------*/
+	/* RECIEVER                                  */
+	/*-------------------------------------------*/
+
+	/* Create a pointer to the received data, adjust to the expected structure */
+  	struct my_msg_t *msgPtr = (struct my_msg_t *) data;
+
+	printf("ID: %d, X pos: %d, Y pos: %d, ASN: %d, Offset: %d\n", 
+		msgPtr->id, msgPtr->x_pos, msgPtr->y_pos, msgPtr->event_asn, msgPtr->event_offset);
+	
+	if(node_count == 0){
+		printf("First node!\n");
+		struct my_node_t new_node;
+		new_node.event_valid = 1;
+		new_node.id = msgPtr->id;
+		new_node.x_pos = msgPtr->x_pos;
+		new_node.y_pos = msgPtr->y_pos;
+		new_node.event_asn = msgPtr->event_asn;
+		new_node.event_offset = msgPtr->event_offset;
+		my_nodes[node_count] = new_node;
+		node_count++;
+	} else {
+		uint8_t is_new;
+		is_new = 1;
+		int i;		
+		for (i = 0; i < node_count; i++){
+			if(my_nodes[i].id == msgPtr->id){
+				is_new = 0;
+				printf("Not new, updating values...\n");
+			}
+		}
+		if (is_new == 1){
+			printf("New node!\n");
+			struct my_node_t new_node;
+			new_node.event_valid = 1;
+			new_node.id = msgPtr->id;
+			new_node.x_pos = msgPtr->x_pos;
+			new_node.y_pos = msgPtr->y_pos;
+			new_node.event_asn = msgPtr->event_asn;
+			new_node.event_offset = msgPtr->event_offset;
+			my_nodes[node_count] = new_node;
+			node_count++;
+		}
+	}
+			
 }
 /*---------------------------------------------------------------------------*/
 static uip_ipaddr_t *

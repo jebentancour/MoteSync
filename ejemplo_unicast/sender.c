@@ -23,6 +23,14 @@
 #define SEND_INTERVAL (30 * CLOCK_SECOND)
 #define SEND_TIME (rand() % (SEND_INTERVAL))
 
+#include "data.h"
+
+/* Create a structure and pointer to store the data to be sent as payload */
+static struct my_msg_t msg;
+static struct my_msg_t *msgPtr = &msg;
+
+/*---------------------------------------------------------------------------*/
+
 static struct simple_udp_connection unicast_connection;
 /*---------------------------------------------------------------------------*/
 PROCESS(node_process, "RPL Node");
@@ -164,7 +172,7 @@ PROCESS_THREAD(node_process, ev, data)
 {
   static struct etimer print_timer, periodic_timer, send_timer;
   uip_ipaddr_t addr;
-  uip_ip6addr(&addr, 0xfd00, 0, 0, 0, 0xc30c, 0, 0, 13); //Esto porque estoy cargando el receiver con NODEID=0x0013
+  uip_ip6addr(&addr, 0xfe80, 0x0, 0x0, 0x0, 0x212, 0x4b00, 0x60d, 0x0012);
 
   PROCESS_BEGIN();
 
@@ -204,15 +212,25 @@ PROCESS_THREAD(node_process, ev, data)
       etimer_set(&send_timer, SEND_TIME);
     }
     if (etimer_expired(&send_timer)) {
-      static unsigned int message_number;
-      char buf[20];
+	printf("Sending unicast to ");
+      	uip_debug_ipaddr_print(&addr);
+      	printf("\n");
 
-      printf("Sending unicast to ");
-      uip_debug_ipaddr_print(&addr);
-      printf("\n");
-      sprintf(buf, "Message %d", message_number);
-      message_number++;
-      simple_udp_sendto(&unicast_connection, buf, strlen(buf) + 1, &addr);
+	/*-------------------------------------------*/
+	/* SENDER                                    */
+	/*-------------------------------------------*/
+
+	msg.id = 15;
+	msg.x_pos = 0;
+	msg.y_pos = 3;
+	msg.event_asn = 24;
+ 	msg.event_offset = 120;
+	
+	printf("ID: %d, X pos: %d, Y pos: %d, ASN: %d, Offset: %d\n", 
+		msg.id, msg.x_pos, msg.y_pos, msg.event_asn, msg.event_offset);
+
+	simple_udp_sendto(&unicast_connection, msgPtr, sizeof(msg), &addr);
+
     }
 }
   PROCESS_END();
