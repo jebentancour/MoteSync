@@ -1,5 +1,7 @@
 # README
 
+El archivo tsch_slot_operation.c va en contiki/core/net/mac/tsch.
+
 ## Modificaciones respecto al original.
 
 Agrego las siguientes variables que se definen en sender.c y receiver.c según corresponda: 
