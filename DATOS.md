@@ -1,1 +1,1 @@
-### Ticks de reloj por segundo: 32768
+#### Ticks de reloj por segundo: 32768
