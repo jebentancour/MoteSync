@@ -26,7 +26,7 @@
 #define UDP_PORT 1234
 
 rtimer_clock_t ti;
-struct asn_t ASync;
+struct tsch_asn_t ASync;
 static struct simple_udp_connection unicast_connection;
 /*---------------------------------------------------------------------------*/
 PROCESS(node_process, "RPL Node");

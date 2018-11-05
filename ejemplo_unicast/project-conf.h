@@ -8,8 +8,8 @@
 #define CC1200_CONF_USE_RX_WATCHDOG 0
 #define ANTENNA_SW_SELECT_DEF_CONF  ANTENNA_SW_SELECT_SUBGHZ
 */
-//#undef MAX_LINK_METRIC
-//#define MAX_LINK_METRIC 10000
+
+
 
 
 /*---------------------------------------------------------------------------*/
@@ -67,7 +67,7 @@
  * must call NETSTACK_MAC.on() to start it. Useful when the
  * application needs to control when the nodes are to start
  * scanning or advertising.*/
-#define TSCH_CONF_AUTOSTART 1
+#define TSCH_CONF_AUTOSTART 0
 
 /*---------------------------------------------------------------------------*/
 /* TSCH log configuration */
@@ -86,7 +86,7 @@
 
 /* 6TiSCH Minimal schedule slotframe length.
  * Larger values result in less frequent active slots: reduces capacity and saves energy. */
-#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 13
+#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 3
 
 /*---------------------------------------------------------------------------*/
 /*MODIFICAR ESTO EN LA TAREA 2 PARTE 3*/
@@ -111,6 +111,11 @@
 
 /* How long to scan each channel in the scanning phase */
 #define TSCH_CONF_CHANNEL_SCAN_DURATION CLOCK_SECOND
+
+/*
+#undef TSCH_CONF_DEFAULT_TIMESLOT_LENGTH
+#define TSCH_CONF_DEFAULT_TIMESLOT_LENGTH 15000
+*/
 
 /*---------------------------------------------------------------------------*/
 /* 802.15.4 frame configuration

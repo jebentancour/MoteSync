@@ -31,7 +31,7 @@
 
 static struct simple_udp_connection unicast_connection;
 rtimer_clock_t ti;
-struct asn_t ASync;
+struct tsch_asn_t ASync;
 /*---------------------------------------------------------------------------*/
 PROCESS(node_process, "RPL Node");
 AUTOSTART_PROCESSES(&node_process);

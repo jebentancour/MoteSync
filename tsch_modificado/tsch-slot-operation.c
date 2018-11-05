@@ -56,7 +56,8 @@
 #include "net/mac/tsch/tsch-adaptive-timesync.h"
 
 extern rtimer_clock_t ti;
-extern struct asn_t ASync;
+extern struct tsch_asn_t ASync;
+
 #if TSCH_LOG_LEVEL >= 1
 #define DEBUG DEBUG_PRINT
 #else /* TSCH_LOG_LEVEL */
@@ -295,11 +296,12 @@ tsch_schedule_slot_operation(struct rtimer *tm, rtimer_clock_t ref_time, rtimer_
   if(r != RTIMER_OK) {
     return 0;
   }
-  	/*
+  	
 ti = ref_time;
-	ASync = current_asn;
+ASync = tsch_current_asn;
 printf("INICIO: %d\n",ti);
-*/
+printf(" ASN : %d \n",ASync.ls4b);
+
   return 1;
 }
 /*---------------------------------------------------------------------------*/
