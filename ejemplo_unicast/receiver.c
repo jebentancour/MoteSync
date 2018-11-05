@@ -15,17 +15,27 @@
 #include "core/sys/clock.h"
 #include "simple-udp.h"
 
+#include "sys/rtimer.h"
+#include "net/mac/tsch/tsch-asn.h"
+
+
+
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
 
 #define UDP_PORT 1234
 
+rtimer_clock_t ti;
+struct asn_t ASync;
 static struct simple_udp_connection unicast_connection;
 /*---------------------------------------------------------------------------*/
 PROCESS(node_process, "RPL Node");
 AUTOSTART_PROCESSES(&node_process);
 
 /*---------------------------------------------------------------------------*/
+
+
+
 static void
 print_network_status(void)
 {
@@ -194,11 +204,12 @@ PROCESS_THREAD(node_process, ev, data)
 
   simple_udp_register(&unicast_connection, UDP_PORT, NULL, UDP_PORT, receiver);
 
-#if WITH_TSCH
+
   /* 2 possible TSCH roles:
    * - role_6dr: DAG root, will advertise (unsecured) beacons
    * - role_6dr_sec: DAG root, will advertise secured beacons
    */
+
   static enum { role_6ln, role_6dr, role_6dr_sec } node_role;
 
   if(LLSEC802154_ENABLED) {
@@ -216,15 +227,13 @@ PROCESS_THREAD(node_process, ev, data)
   uip_ip6addr(&prefix, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
   net_init(&prefix);
 
-#endif /* WITH_TSCH */
 
   /* Print out routing tables every minute */
   etimer_set(&print_timer, CLOCK_SECOND * 60);
 
   while(1) {
     PROCESS_WAIT_EVENT();
-
-    if (etimer_expired(&print_timer)) {
+    if(etimer_expired(&print_timer)) {
       print_network_status();
       etimer_reset(&print_timer);
     }

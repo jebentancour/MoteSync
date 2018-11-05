@@ -1,15 +1,17 @@
 #ifndef __PROJECT_CONF_H__
 #define __PROJECT_CONF_H__
 
-#undef  NETSTACK_CONF_RADIO
+/*#undef  NETSTACK_CONF_RADIO
 #define NETSTACK_CONF_RADIO         cc1200_driver
-#define NETSTACK_CONF_RDC           nullrdc_driver
-#define CC1200_CONF_USE_GPIO2       1
+#define NETSTACK_CONF_RDC           nordc_driver
+#define CC1200_CONF_USE_GPIO2       0
 #define CC1200_CONF_USE_RX_WATCHDOG 0
 #define ANTENNA_SW_SELECT_DEF_CONF  ANTENNA_SW_SELECT_SUBGHZ
-#define RPL_MRHOF_CONF_MAX_LINK_METRIC 10000
+*/
+//#undef MAX_LINK_METRIC
+//#define MAX_LINK_METRIC 10000
 
-#if WITH_TSCH == 1
+
 /*---------------------------------------------------------------------------*/
 /* Enable RPL non-storing mode.
  */
@@ -35,14 +37,6 @@
 #undef NETSTACK_CONF_FRAMER
 #define NETSTACK_CONF_FRAMER framer_802154
 
-/* NETSTACK_CONF_RDC specifies the Radio Duty Cycling (RDC) layer. The
-   nullrdc_driver never turns the radio off and is compatible with all
-   radios, but consumes a lot of power. The contikimac_driver is
-   highly power-efficent and allows sleepy routers, but is not
-   compatible with all radios. */
-#undef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC nullrdc_driver
-
 /* NETSTACK_CONF_MAC specifies the Medium Access Control (MAC)
    layer. The nullmac_driver does not provide any MAC
    functionality. The csma_driver is the default CSMA MAC layer, but
@@ -50,7 +44,8 @@
 #undef NETSTACK_CONF_MAC
 #define NETSTACK_CONF_MAC tschmac_driver
 
-
+#undef NETSTACK_CONF_RDC
+#define NETSTACK_CONF_RDC nordc_driver
 
 /*---------------------------------------------------------------------------*/
 /* TSCH configuration options.
@@ -64,14 +59,6 @@
 #define TSCH_CALLBACK_LEAVING_NETWORK tsch_rpl_callback_leaving_network
 
 
-/* On CC2420-based platforms, enable SFD timestamps: */
-/* Disable DCO calibration (uses timerB) */
-/*#undef DCOSYNCH_CONF_ENABLED
-#define DCOSYNCH_CONF_ENABLED 0*/
-/* Enable SFD timestamps (uses timerB) */
-/*#undef CC2420_CONF_SFD_TIMESTAMPS
-#define CC2420_CONF_SFD_TIMESTAMPS 1*/
-
 /*---------------------------------------------------------------------------*/
 /* TSCH configuration
  */
@@ -80,7 +67,7 @@
  * must call NETSTACK_MAC.on() to start it. Useful when the
  * application needs to control when the nodes are to start
  * scanning or advertising.*/
-#define TSCH_CONF_AUTOSTART 0
+#define TSCH_CONF_AUTOSTART 1
 
 /*---------------------------------------------------------------------------*/
 /* TSCH log configuration */
@@ -99,7 +86,7 @@
 
 /* 6TiSCH Minimal schedule slotframe length.
  * Larger values result in less frequent active slots: reduces capacity and saves energy. */
-#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 3
+#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 13
 
 /*---------------------------------------------------------------------------*/
 /*MODIFICAR ESTO EN LA TAREA 2 PARTE 3*/
@@ -158,6 +145,5 @@
 #undef SICSLOWPAN_CONF_FRAG
 #define SICSLOWPAN_CONF_FRAG 0
 
-#endif /* WITH_TSCH */
 
 #endif /* __PROJECT_CONF_H__ */

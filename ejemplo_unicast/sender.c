@@ -16,6 +16,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
+#include "sys/rtimer.h"
+#include "net/mac/tsch/tsch-asn.h"
+
+
+
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
 
@@ -24,11 +30,15 @@
 #define SEND_TIME (rand() % (SEND_INTERVAL))
 
 static struct simple_udp_connection unicast_connection;
+rtimer_clock_t ti;
+struct asn_t ASync;
 /*---------------------------------------------------------------------------*/
 PROCESS(node_process, "RPL Node");
 AUTOSTART_PROCESSES(&node_process);
 
 /*---------------------------------------------------------------------------*/
+
+
 static void
 print_network_status(void)
 {
@@ -45,7 +55,7 @@ print_network_status(void)
   PRINTF("--- Network status ---\n");
 
   /* Our IPv6 addresses */
-  PRINTF("- Server IPv6 addresses:\n");
+  PRINTF("- IPv6 addresses:\n");
   for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
     state = uip_ds6_if.addr_list[i].state;
     if(uip_ds6_if.addr_list[i].isused &&
@@ -164,15 +174,13 @@ PROCESS_THREAD(node_process, ev, data)
 {
   static struct etimer print_timer, periodic_timer, send_timer;
   uip_ipaddr_t addr;
-  uip_ip6addr(&addr, 0xfd00, 0, 0, 0, 0xc30c, 0, 0, 13); //Esto porque estoy cargando el receiver con NODEID=0x0013
+  uip_ip6addr(&addr, 0xfd00, 0, 0, 0, 0x212, 0x4b00, 0x60d, 0x0013); //Esto porque estoy cargando el receiver con NODEID=0x0013
 
   PROCESS_BEGIN();
-
   set_global_address();
 
   simple_udp_register(&unicast_connection, UDP_PORT, NULL, UDP_PORT, receiver);
 
-#if WITH_TSCH
   /* TSCH role:
    * - role_6ln: simple node, will join any network, secured or not
    */
@@ -185,7 +193,6 @@ PROCESS_THREAD(node_process, ev, data)
   tsch_set_pan_secured(0);
 
   net_init(NULL);
-#endif /* WITH_TSCH */
 
   /* Print out routing tables every minute */
   etimer_set(&print_timer, CLOCK_SECOND * 60);
@@ -194,7 +201,6 @@ PROCESS_THREAD(node_process, ev, data)
 
   while(1) {
     PROCESS_WAIT_EVENT();
-
     if (etimer_expired(&print_timer)) {
       print_network_status();
       etimer_reset(&print_timer);

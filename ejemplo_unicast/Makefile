@@ -12,10 +12,9 @@ LDFLAGS += -Wl,--gc-sections,--undefined=_reset_vector__,--undefined=InterruptVe
 
 CONTIKI_WITH_IPV6 = 1
 
-ifeq ($(WITH_TSCH),1)
 MODULES += core/net/mac/tsch
 CFLAGS += -DWITH_TSCH=1
-endif
+
 
 #ifeq ($(MAKE_WITH_PERIODIC_ROUTES_PRINT),1)
 #CFLAGS += -DWITH_PERIODIC_ROUTES_PRINT=1
