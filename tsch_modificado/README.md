@@ -1,6 +1,6 @@
 # README
 
-El archivo tsch_slot_operation.c va en contiki/core/net/mac/tsch.
+El archivo tsch-slot-operation.c va en contiki/core/net/mac/tsch.
 
 ## Modificaciones respecto al original.
 
