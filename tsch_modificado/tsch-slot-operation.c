@@ -241,7 +241,7 @@ tsch_release_lock(void)
 uint8_t
 tsch_calculate_channel(struct tsch_asn_t *asn, uint8_t channel_offset)
 {
-  uint16_t index_of_0 = ASN_MOD(*asn, tsch_hopping_sequence_length);
+  uint16_t index_of_0 = TSCH_ASN_MOD(*asn, tsch_hopping_sequence_length);
   uint16_t index_of_offset = (index_of_0 + channel_offset) % tsch_hopping_sequence_length.val;
   return tsch_hopping_sequence[index_of_offset];
 }
@@ -527,7 +527,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
          * the original untouched. This is to allow for future retransmissions. */
         int with_encryption = queuebuf_attr(current_packet->qb, PACKETBUF_ATTR_SECURITY_LEVEL) & 0x4;
         packet_len += tsch_security_secure_frame(packet, with_encryption ? encrypted_packet : packet, current_packet->header_len,
-            packet_len - current_packet->header_len, &current_asn);
+            packet_len - current_packet->header_len, &tsch_current_asn);
         if(with_encryption) {
           packet = encrypted_packet;
         }
@@ -624,7 +624,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
 #if LLSEC802154_ENABLED
                 if(ack_len != 0) {
                   if(!tsch_security_parse_frame(ackbuf, ack_hdrlen, ack_len - ack_hdrlen - tsch_security_mic_len(&frame),
-                      &frame, &current_neighbor->addr, &current_asn)) {
+                      &frame, &current_neighbor->addr, &tsch_current_asn)) {
                     TSCH_LOG_ADD(tsch_log_message,
                         snprintf(log->message, sizeof(log->message),
                         "!failed to authenticate ACK"));
@@ -641,7 +641,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
               if(ack_len != 0) {
                 if(is_time_source) {
                   int32_t eack_time_correction = US_TO_RTIMERTICKS(ack_ies.ie_time_correction);
-                  int32_t since_last_timesync = ASN_DIFF(current_asn, last_sync_asn);
+                  int32_t since_last_timesync = TSCH_ASN_DIFF(tsch_current_asn, last_sync_asn);
                   if(eack_time_correction > SYNC_IE_BOUND) {
                     drift_correction = SYNC_IE_BOUND;
                   } else if(eack_time_correction < -SYNC_IE_BOUND) {
@@ -658,7 +658,7 @@ PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t))
                   is_drift_correction_used = 1;
                   tsch_timesync_update(current_neighbor, since_last_timesync, drift_correction);
                   /* Keep track of sync time */
-                  last_sync_asn = current_asn;
+                  last_sync_asn = tsch_current_asn;
                   tsch_schedule_keepalive();
                 }
                 mac_tx_status = MAC_TX_OK;
@@ -790,7 +790,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
         /* Read packet */
         current_input->len = NETSTACK_RADIO.read((void *)current_input->payload, TSCH_PACKET_MAX_LEN);
         NETSTACK_RADIO.get_value(RADIO_PARAM_LAST_RSSI, &radio_last_rssi);
-        current_input->rx_asn = current_asn;
+        current_input->rx_asn = tsch_current_asn;
         current_input->rssi = (signed)radio_last_rssi;
         current_input->channel = current_channel;
         header_len = frame802154_parse((uint8_t *)current_input->payload, current_input->len, &frame);
@@ -810,7 +810,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
         if(frame_valid) {
           if(tsch_security_parse_frame(
                current_input->payload, header_len, current_input->len - header_len - tsch_security_mic_len(&frame),
-               &frame, &source_address, &current_asn)) {
+               &frame, &source_address, &tsch_current_asn)) {
             current_input->len -= tsch_security_mic_len(&frame);
           } else {
             TSCH_LOG_ADD(tsch_log_message,
@@ -861,7 +861,7 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
 #if LLSEC802154_ENABLED
               if(tsch_is_pan_secured) {
                 /* Secure ACK frame. There is only header and header IEs, therefore data len == 0. */
-                ack_len += tsch_security_secure_frame(ack_buf, ack_buf, ack_len, 0, &current_asn);
+                ack_len += tsch_security_secure_frame(ack_buf, ack_buf, ack_len, 0, &tsch_current_asn);
               }
 #endif /* LLSEC802154_ENABLED */
 
@@ -879,9 +879,9 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
             /* If the sender is a time source, proceed to clock drift compensation */
             n = tsch_queue_get_nbr(&source_address);
             if(n != NULL && n->is_time_source) {
-              int32_t since_last_timesync = ASN_DIFF(current_asn, last_sync_asn);
+              int32_t since_last_timesync = TSCH_ASN_DIFF(tsch_current_asn, last_sync_asn);
               /* Keep track of last sync time */
-              last_sync_asn = current_asn;
+              last_sync_asn = tsch_current_asn;
               /* Save estimated drift */
               drift_correction = -estimated_drift;
               is_drift_correction_used = 1;
@@ -935,11 +935,7 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
   TSCH_DEBUG_INTERRUPT();
   PT_BEGIN(&slot_operation_pt);
 
-/*	ti = RTIMER_NOW();
-	ASync = current_asn;
-printf("INICIO: %d\n",ti);
-*/
-  /* Loop over all active slots */
+/* Loop over all active slots */
   while(tsch_is_associated) {
 
     if(current_link == NULL || tsch_lock_requested) { /* Skip slot operation if there is no link
@@ -957,8 +953,9 @@ printf("INICIO: %d\n",ti);
       int is_active_slot;
       TSCH_DEBUG_SLOT_START();
 ti = RTIMER_NOW();
-	ASync = current_asn;
+	ASync = tsch_current_asn;
 printf("INICIO: %d\n",ti);
+	    printf("ASN:%d\n",ASync.ls4b);
       tsch_in_slot_operation = 1;
 
       /* Reset drift correction */
@@ -975,7 +972,7 @@ printf("INICIO: %d\n",ti);
       is_active_slot = current_packet != NULL || (current_link->link_options & LINK_OPTION_RX);
       if(is_active_slot) {
         /* Hop channel */
-        current_channel = tsch_calculate_channel(&current_asn, current_link->channel_offset);
+        current_channel = tsch_calculate_channel(&tsch_current_asn, current_link->channel_offset);
         NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, current_channel);
         /* Turn the radio on already here if configured so; necessary for radios with slow startup */
         tsch_radio_on(TSCH_RADIO_CMD_ON_START_OF_TIMESLOT);
@@ -1001,12 +998,12 @@ printf("INICIO: %d\n",ti);
     /* End of slot operation, schedule next slot or resynchronize */
 
     /* Do we need to resynchronize? i.e., wait for EB again */
-    if(!tsch_is_coordinator && (ASN_DIFF(current_asn, last_sync_asn) >
+    if(!tsch_is_coordinator && (TSCH_ASN_DIFF(tsch_current_asn, last_sync_asn) >
         (100 * TSCH_CLOCK_TO_SLOTS(TSCH_DESYNC_THRESHOLD / 100, tsch_timing[tsch_ts_timeslot_length])))) {
       TSCH_LOG_ADD(tsch_log_message,
             snprintf(log->message, sizeof(log->message),
                 "! leaving the network, last sync %u",
-                          (unsigned)ASN_DIFF(current_asn, last_sync_asn));
+                          (unsigned)TSCH_ASN_DIFF(tsch_current_asn, last_sync_asn));
       );
       last_timesource_neighbor = NULL;
       tsch_disassociate();
@@ -1028,14 +1025,14 @@ printf("INICIO: %d\n",ti);
         }
 
         /* Get next active link */
-        current_link = tsch_schedule_get_next_active_link(&current_asn, &timeslot_diff, &backup_link);
+        current_link = tsch_schedule_get_next_active_link(&tsch_current_asn, &timeslot_diff, &backup_link);
         if(current_link == NULL) {
           /* There is no next link. Fall back to default
            * behavior: wake up at the next slot. */
           timeslot_diff = 1;
         }
         /* Update ASN */
-        ASN_INC(current_asn, timeslot_diff);
+        TSCH_ASN_INC(tsch_current_asn, timeslot_diff);
         /* Time to next wake up */
         time_to_next_active_slot = timeslot_diff * tsch_timing[tsch_ts_timeslot_length] + drift_correction;
         drift_correction = 0;
@@ -1066,14 +1063,14 @@ tsch_slot_operation_start(void)
   do {
     uint16_t timeslot_diff;
     /* Get next active link */
-    current_link = tsch_schedule_get_next_active_link(&current_asn, &timeslot_diff, &backup_link);
+    current_link = tsch_schedule_get_next_active_link(&tsch_current_asn, &timeslot_diff, &backup_link);
     if(current_link == NULL) {
       /* There is no next link. Fall back to default
        * behavior: wake up at the next slot. */
       timeslot_diff = 1;
     }
     /* Update ASN */
-    ASN_INC(current_asn, timeslot_diff);
+    TSCH_ASN_INC(tsch_current_asn, timeslot_diff);
     /* Time to next wake up */
     time_to_next_active_slot = timeslot_diff * tsch_timing[tsch_ts_timeslot_length];
     /* Update current slot start */
@@ -1088,8 +1085,8 @@ tsch_slot_operation_sync(rtimer_clock_t next_slot_start,
     struct tsch_asn_t *next_slot_asn)
 {
   current_slot_start = next_slot_start;
-  current_asn = *next_slot_asn;
-  last_sync_asn = current_asn;
+  tsch_current_asn = *next_slot_asn;
+  last_sync_asn = tsch_current_asn;
   current_link = NULL;
 }
 /*---------------------------------------------------------------------------*/
