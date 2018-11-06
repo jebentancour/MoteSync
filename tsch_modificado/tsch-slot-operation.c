@@ -54,9 +54,15 @@
 #include "net/mac/tsch/tsch-packet.h"
 #include "net/mac/tsch/tsch-security.h"
 #include "net/mac/tsch/tsch-adaptive-timesync.h"
+#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64
+#include "lib/simEnvChange.h"
+#include "sys/cooja_mt.h"
+#endif /* CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64 */
 
+//SYNC
 extern rtimer_clock_t ti;
 extern struct tsch_asn_t ASync;
+//static long unsigned asnn;
 
 #if TSCH_LOG_LEVEL >= 1
 #define DEBUG DEBUG_PRINT
@@ -107,7 +113,10 @@ extern struct tsch_asn_t ASync;
 #if RTIMER_SECOND < (32 * 1024)
 #error "TSCH: RTIMER_SECOND < (32 * 1024)"
 #endif
-#if RTIMER_SECOND >= 200000
+#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64
+/* Use 0 usec guard time for Cooja Mote with a 1 MHz Rtimer*/
+#define RTIMER_GUARD 0u
+#elif RTIMER_SECOND >= 200000
 #define RTIMER_GUARD (RTIMER_SECOND / 100000)
 #else
 #define RTIMER_GUARD 2u
@@ -203,7 +212,12 @@ tsch_get_lock(void)
     if(tsch_in_slot_operation) {
       busy_wait = 1;
       busy_wait_time = RTIMER_NOW();
-      while(tsch_in_slot_operation);
+      while(tsch_in_slot_operation) {
+#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64
+        simProcessRunValue = 1;
+        cooja_mt_yield();
+#endif /* CONTIKI_TARGET_COOJA || CONTIKI_TARGET_COOJA_IP64 */
+      }
       busy_wait_time = RTIMER_NOW() - busy_wait_time;
     }
     if(!tsch_locked) {
@@ -296,12 +310,12 @@ tsch_schedule_slot_operation(struct rtimer *tm, rtimer_clock_t ref_time, rtimer_
   if(r != RTIMER_OK) {
     return 0;
   }
-  	
+//SYNC
 ti = ref_time;
-ASync = tsch_current_asn;
 printf("INICIO: %d\n",ti);
+ASync = tsch_current_asn;
+//asnn = ASync.ls4b + ((((long unsigned) ASync.ms1b) & 0x00000000ff)<<64);
 printf(" ASN : %d \n",ASync.ls4b);
-
   return 1;
 }
 /*---------------------------------------------------------------------------*/
@@ -858,22 +872,24 @@ PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t))
               ack_len = tsch_packet_create_eack(ack_buf, sizeof(ack_buf),
                   &source_address, frame.seq, (int16_t)RTIMERTICKS_TO_US(estimated_drift), do_nack);
 
+              if(ack_len > 0) {
 #if LLSEC802154_ENABLED
-              if(tsch_is_pan_secured) {
-                /* Secure ACK frame. There is only header and header IEs, therefore data len == 0. */
-                ack_len += tsch_security_secure_frame(ack_buf, ack_buf, ack_len, 0, &tsch_current_asn);
-              }
+                if(tsch_is_pan_secured) {
+                  /* Secure ACK frame. There is only header and header IEs, therefore data len == 0. */
+                  ack_len += tsch_security_secure_frame(ack_buf, ack_buf, ack_len, 0, &tsch_current_asn);
+                }
 #endif /* LLSEC802154_ENABLED */
 
-              /* Copy to radio buffer */
-              NETSTACK_RADIO.prepare((const void *)ack_buf, ack_len);
+                /* Copy to radio buffer */
+                NETSTACK_RADIO.prepare((const void *)ack_buf, ack_len);
 
-              /* Wait for time to ACK and transmit ACK */
-              TSCH_SCHEDULE_AND_YIELD(pt, t, rx_start_time,
-                  packet_duration + tsch_timing[tsch_ts_tx_ack_delay] - RADIO_DELAY_BEFORE_TX, "RxBeforeAck");
-              TSCH_DEBUG_RX_EVENT();
-              NETSTACK_RADIO.transmit(ack_len);
-              tsch_radio_off(TSCH_RADIO_CMD_OFF_WITHIN_TIMESLOT);
+                /* Wait for time to ACK and transmit ACK */
+                TSCH_SCHEDULE_AND_YIELD(pt, t, rx_start_time,
+                                        packet_duration + tsch_timing[tsch_ts_tx_ack_delay] - RADIO_DELAY_BEFORE_TX, "RxBeforeAck");
+                TSCH_DEBUG_RX_EVENT();
+                NETSTACK_RADIO.transmit(ack_len);
+                tsch_radio_off(TSCH_RADIO_CMD_OFF_WITHIN_TIMESLOT);
+              }
             }
 
             /* If the sender is a time source, proceed to clock drift compensation */
@@ -935,9 +951,8 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
   TSCH_DEBUG_INTERRUPT();
   PT_BEGIN(&slot_operation_pt);
 
-/* Loop over all active slots */
+  /* Loop over all active slots */
   while(tsch_is_associated) {
-
     if(current_link == NULL || tsch_lock_requested) { /* Skip slot operation if there is no link
                                                           or if there is a pending request for getting the lock */
       /* Issue a log whenever skipping a slot */
@@ -952,12 +967,7 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
     } else {
       int is_active_slot;
       TSCH_DEBUG_SLOT_START();
-ti = RTIMER_NOW();
-	ASync = tsch_current_asn;
-printf("INICIO: %d\n",ti);
-	    printf("ASN:%d\n",ASync.ls4b);
       tsch_in_slot_operation = 1;
-
       /* Reset drift correction */
       drift_correction = 0;
       is_drift_correction_used = 0;
@@ -971,6 +981,7 @@ printf("INICIO: %d\n",ti);
       }
       is_active_slot = current_packet != NULL || (current_link->link_options & LINK_OPTION_RX);
       if(is_active_slot) {
+
         /* Hop channel */
         current_channel = tsch_calculate_channel(&tsch_current_asn, current_link->channel_offset);
         NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, current_channel);
