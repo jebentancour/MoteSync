@@ -1,4 +1,4 @@
-##README
+## README
 
 El "sensor" del gpio C3 se implementa en gpioc3.{c,h}
 
