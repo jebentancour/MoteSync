@@ -135,7 +135,7 @@ struct ringbufindex input_ringbuf;
 struct input_packet input_array[TSCH_MAX_INCOMING_PACKETS];
 
 /* Last time we received Sync-IE (ACK or data packet from a time source) */
-static struct asn_t last_sync_asn;
+static struct tsch_asn_t last_sync_asn;
 
 /* A global lock for manipulating data structures safely from outside of interrupt */
 static volatile int tsch_locked = 0;
@@ -239,7 +239,7 @@ tsch_release_lock(void)
 
 /* Return channel from ASN and channel offset */
 uint8_t
-tsch_calculate_channel(struct asn_t *asn, uint8_t channel_offset)
+tsch_calculate_channel(struct tsch_asn_t *asn, uint8_t channel_offset)
 {
   uint16_t index_of_0 = ASN_MOD(*asn, tsch_hopping_sequence_length);
   uint16_t index_of_offset = (index_of_0 + channel_offset) % tsch_hopping_sequence_length.val;
@@ -1085,7 +1085,7 @@ tsch_slot_operation_start(void)
 /* Start actual slot operation */
 void
 tsch_slot_operation_sync(rtimer_clock_t next_slot_start,
-    struct asn_t *next_slot_asn)
+    struct tsch_asn_t *next_slot_asn)
 {
   current_slot_start = next_slot_start;
   current_asn = *next_slot_asn;
