@@ -10,6 +10,12 @@ SMALL = 1
 CFLAGS += -ffunction-sections
 LDFLAGS += -Wl,--gc-sections,--undefined=_reset_vector__,--undefined=InterruptVectors,--undefined=_copy_data_init__,--undefined=_clear_bss_init__,--undefined=_end_of_init__
 
+# To use math library
+TARGET_LIBFILES+=-lm
+
+# Project .c files
+PROJECT_SOURCEFILES += decoder.c
+
 CONTIKI_WITH_IPV6 = 1
 
 ifeq ($(WITH_TSCH),1)

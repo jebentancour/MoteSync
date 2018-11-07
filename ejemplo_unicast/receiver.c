@@ -20,104 +20,17 @@
 
 #define UDP_PORT 1234
 
-#include "data.h"
+////////////////////////////////////////////////////////////////////////////
 
-struct my_node_t {
-  uint8_t event_valid;
-  uint8_t id;
-  int16_t x_pos;
-  int16_t y_pos;
-  uint16_t event_asn;
-  uint16_t event_offset;
-};
+#include "decoder.h"
 
-static struct my_node_t my_nodes[8];
-static uint8_t node_count;
+////////////////////////////////////////////////////////////////////////////
 
 static struct simple_udp_connection unicast_connection;
 /*---------------------------------------------------------------------------*/
 PROCESS(node_process, "RPL Node");
 AUTOSTART_PROCESSES(&node_process);
 
-/*---------------------------------------------------------------------------*/
-static void
-print_network_status(void)
-{
-  int i;
-  uint8_t state;
-  uip_ds6_defrt_t *default_route;
-#if RPL_WITH_STORING
-  uip_ds6_route_t *route;
-#endif /* RPL_WITH_STORING */
-#if RPL_WITH_NON_STORING
-  rpl_ns_node_t *link;
-#endif /* RPL_WITH_NON_STORING */
-
-  PRINTF("--- Network status ---\n");
-
-  /* Our IPv6 addresses */
-  PRINTF("- IPv6 addresses:\n");
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-    state = uip_ds6_if.addr_list[i].state;
-    if(uip_ds6_if.addr_list[i].isused &&
-       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-      PRINTF("-- ");
-      PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-      PRINTF("\n");
-    }
-  }
-
-  /* Our default route */
-  PRINTF("- Default route:\n");
-  default_route = uip_ds6_defrt_lookup(uip_ds6_defrt_choose());
-  if(default_route != NULL) {
-    PRINTF("-- ");
-    PRINT6ADDR(&default_route->ipaddr);
-    PRINTF(" (lifetime: %lu seconds)\n", (unsigned long)default_route->lifetime.interval);
-  } else {
-    PRINTF("-- None\n");
-  }
-
-#if RPL_WITH_STORING
-  /* Our routing entries */
-  PRINTF("- Routing entries (%u in total):\n", uip_ds6_route_num_routes());
-  route = uip_ds6_route_head();
-  while(route != NULL) {
-    PRINTF("-- ");
-    PRINT6ADDR(&route->ipaddr);
-    PRINTF(" via ");
-    PRINT6ADDR(uip_ds6_route_nexthop(route));
-    PRINTF(" (lifetime: %lu seconds)\n", (unsigned long)route->state.lifetime);
-    route = uip_ds6_route_next(route);
-  }
-#endif
-
-#if RPL_WITH_NON_STORING
-  /* Our routing links */
-  PRINTF("- Routing links (%u in total):\n", rpl_ns_num_nodes());
-  link = rpl_ns_node_head();
-  while(link != NULL) {
-    uip_ipaddr_t child_ipaddr;
-    uip_ipaddr_t parent_ipaddr;
-    rpl_ns_get_node_global_addr(&child_ipaddr, link);
-    rpl_ns_get_node_global_addr(&parent_ipaddr, link->parent);
-    PRINTF("-- ");
-    PRINT6ADDR(&child_ipaddr);
-    if(link->parent == NULL) {
-      memset(&parent_ipaddr, 0, sizeof(parent_ipaddr));
-      PRINTF(" --- DODAG root ");
-    } else {
-      PRINTF(" to ");
-      PRINT6ADDR(&parent_ipaddr);
-    }
-    PRINTF(" (lifetime: %lu seconds)\n", (unsigned long)link->lifetime);
-    link = rpl_ns_node_next(link);
-  }
-#endif
-
-  PRINTF("----------------------\n");
-}
-/*---------------------------------------------------------------------------*/
 static void
 net_init(uip_ipaddr_t *br_prefix)
 {
@@ -149,52 +62,16 @@ receiver(struct simple_udp_connection *c,
   uip_debug_ipaddr_print(sender_addr);
   printf(" on port %d from port %d with length %d.\n",
          receiver_port, sender_port, datalen);
-	
-	/*-------------------------------------------*/
-	/* RECIEVER                                  */
-	/*-------------------------------------------*/
-
-	/* Create a pointer to the received data, adjust to the expected structure */
-  	struct my_msg_t *msgPtr = (struct my_msg_t *) data;
-
-	printf("ID: %d, X pos: %d, Y pos: %d, ASN: %d, Offset: %d\n", 
-		msgPtr->id, msgPtr->x_pos, msgPtr->y_pos, msgPtr->event_asn, msgPtr->event_offset);
-	
-	if(node_count == 0){
-		printf("First node!\n");
-		struct my_node_t new_node;
-		new_node.event_valid = 1;
-		new_node.id = msgPtr->id;
-		new_node.x_pos = msgPtr->x_pos;
-		new_node.y_pos = msgPtr->y_pos;
-		new_node.event_asn = msgPtr->event_asn;
-		new_node.event_offset = msgPtr->event_offset;
-		my_nodes[node_count] = new_node;
-		node_count++;
-	} else {
-		uint8_t is_new;
-		is_new = 1;
-		int i;		
-		for (i = 0; i < node_count; i++){
-			if(my_nodes[i].id == msgPtr->id){
-				is_new = 0;
-				printf("Not new, updating values...\n");
-			}
-		}
-		if (is_new == 1){
-			printf("New node!\n");
-			struct my_node_t new_node;
-			new_node.event_valid = 1;
-			new_node.id = msgPtr->id;
-			new_node.x_pos = msgPtr->x_pos;
-			new_node.y_pos = msgPtr->y_pos;
-			new_node.event_asn = msgPtr->event_asn;
-			new_node.event_offset = msgPtr->event_offset;
-			my_nodes[node_count] = new_node;
-			node_count++;
-		}
-	}
-			
+  
+  /*-------------------------------------------*/
+  /* RECEIVER                                  */
+  /*-------------------------------------------*/
+  
+  decoder_receiver(data);
+  
+  /*-------------------------------------------*/
+  /* END RECEIVER                              */
+  /*-------------------------------------------*/
 }
 /*---------------------------------------------------------------------------*/
 static uip_ipaddr_t *
@@ -278,15 +155,25 @@ PROCESS_THREAD(node_process, ev, data)
 
 #endif /* WITH_TSCH */
 
-  /* Print out routing tables every minute */
-  etimer_set(&print_timer, CLOCK_SECOND * 60);
+  /* Print timer */
+  etimer_set(&print_timer, CLOCK_SECOND * 30);
 
   while(1) {
     PROCESS_WAIT_EVENT();
 
     if (etimer_expired(&print_timer)) {
-      print_network_status();
+
       etimer_reset(&print_timer);
+      
+      /*-------------------------------------------*/
+      /* RECIEVER                                  */
+      /*-------------------------------------------*/
+      
+      decoder_process();
+      
+      /*-------------------------------------------*/
+      /* END RECIEVER                              */
+      /*-------------------------------------------*/
     }
   }
 

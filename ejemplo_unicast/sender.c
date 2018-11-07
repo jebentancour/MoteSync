@@ -23,11 +23,15 @@
 #define SEND_INTERVAL (30 * CLOCK_SECOND)
 #define SEND_TIME (rand() % (SEND_INTERVAL))
 
+////////////////////////////////////////////////////////////////////////////
+
 #include "data.h"
 
 /* Create a structure and pointer to store the data to be sent as payload */
 static struct my_msg_t msg;
 static struct my_msg_t *msgPtr = &msg;
+
+////////////////////////////////////////////////////////////////////////////
 
 /*---------------------------------------------------------------------------*/
 
@@ -212,25 +216,60 @@ PROCESS_THREAD(node_process, ev, data)
       etimer_set(&send_timer, SEND_TIME);
     }
     if (etimer_expired(&send_timer)) {
-	printf("Sending unicast to ");
-      	uip_debug_ipaddr_print(&addr);
-      	printf("\n");
+      printf("Sending unicast to ");
+        	uip_debug_ipaddr_print(&addr);
+        	printf("\n");
+      
+      /*-------------------------------------------*/
+      /* SENDER                                    */
+      /*-------------------------------------------*/
+      
+      msg.id = 15;
+      msg.x_pos = 0;
+      msg.y_pos = 0;
+      
+      msg.event_asn_ls4b = 4;
+      msg.event_asn_ms1b = 0;
+      
+      msg.event_offset = 149;
+      
+      printf("ID: %d, X pos: %lu cm, Y pos: %lu cm, ASN: %lu, Offset: %lu ticks.\n", 
+      	msg.id, msg.x_pos, msg.y_pos, msg.event_asn_ls4b, msg.event_offset);
+      
+      simple_udp_sendto(&unicast_connection, msgPtr, sizeof(msg), &addr);
 
-	/*-------------------------------------------*/
-	/* SENDER                                    */
-	/*-------------------------------------------*/
+      msg.id = 16;
+      msg.x_pos = 0;
+      msg.y_pos = 324;
+      
+      msg.event_asn_ls4b = 4;
+      msg.event_asn_ms1b = 0;
+      
+      msg.event_offset = 255;
+      
+      printf("ID: %d, X pos: %lu cm, Y pos: %lu cm, ASN: %lu, Offset: %lu ticks.\n",
+      	msg.id, msg.x_pos, msg.y_pos, msg.event_asn_ls4b, msg.event_offset);
+      
+      simple_udp_sendto(&unicast_connection, msgPtr, sizeof(msg), &addr);
 
-	msg.id = 15;
-	msg.x_pos = 0;
-	msg.y_pos = 3;
-	msg.event_asn = 24;
- 	msg.event_offset = 120;
-	
-	printf("ID: %d, X pos: %d, Y pos: %d, ASN: %d, Offset: %d\n", 
-		msg.id, msg.x_pos, msg.y_pos, msg.event_asn, msg.event_offset);
-
-	simple_udp_sendto(&unicast_connection, msgPtr, sizeof(msg), &addr);
-
+      msg.id = 17;
+      msg.x_pos = 500;
+      msg.y_pos = 0;
+      
+      msg.event_asn_ls4b = 5;
+      msg.event_asn_ms1b = 0;
+      
+      msg.event_offset = 95;
+      
+      printf("ID: %d, X pos: %lu cm, Y pos: %lu cm, ASN: %lu, Offset: %lu ticks.\n",
+      	msg.id, msg.x_pos, msg.y_pos, msg.event_asn_ls4b, msg.event_offset);
+      
+      simple_udp_sendto(&unicast_connection, msgPtr, sizeof(msg), &addr);
+      
+      /*-------------------------------------------*/
+      /* END SENDER                                */
+      /*-------------------------------------------*/
+      
     }
 }
   PROCESS_END();

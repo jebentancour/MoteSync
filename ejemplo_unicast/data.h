@@ -1,11 +1,17 @@
+#ifndef DATA_H
+#define DATA_H
+
 /*---------------------------------------------------------------------------*/
 /* This data structure is used to store the packet content (payload) */
 struct my_msg_t {
   uint8_t id;
-  int16_t x_pos;
-  int16_t y_pos;
-  uint16_t event_asn;
-  uint16_t event_offset;
+  uint32_t x_pos; // cm
+  uint32_t y_pos; // cm
+  uint32_t event_asn_ls4b;
+  uint32_t event_asn_ms1b;
+  uint32_t event_offset; // ticks
 };
 
 /*---------------------------------------------------------------------------*/
+
+#endif
