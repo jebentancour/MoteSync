@@ -228,7 +228,7 @@ PROCESS_THREAD(node_process, ev, data)
       msg.x_pos = 0;
       msg.y_pos = 0;
       
-      msg.event_asn_ls4b = 4;
+      msg.event_asn_ls4b = 0;
       msg.event_asn_ms1b = 0;
       
       msg.event_offset = 149;
@@ -242,7 +242,7 @@ PROCESS_THREAD(node_process, ev, data)
       msg.x_pos = 0;
       msg.y_pos = 324;
       
-      msg.event_asn_ls4b = 4;
+      msg.event_asn_ls4b = 0;
       msg.event_asn_ms1b = 0;
       
       msg.event_offset = 255;
@@ -256,7 +256,7 @@ PROCESS_THREAD(node_process, ev, data)
       msg.x_pos = 500;
       msg.y_pos = 0;
       
-      msg.event_asn_ls4b = 5;
+      msg.event_asn_ls4b = 1;
       msg.event_asn_ms1b = 0;
       
       msg.event_offset = 95;
