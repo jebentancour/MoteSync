@@ -2,7 +2,7 @@
 
 Se estudió la implementación de TSCH en Contiki-NG (bajo el directorio os/net/mac/tsch/ ) buscando obtener el tiempo de inicio de cada timeslot y el ASN correspondiente, con la motivación de utilizar la sincoronización provista por TSCH para obtener mayor precisión en el calculo de las distancias entre el lugar donde se produce el evento y los distintos motes. 
 
-En particular es de interés el módulo tsch-slot-operation.{h, c} donde se implementan las funciones vinculadas a la operación de los slots. Se define un thread principal `static PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr));` para operación de los slots, el cual se activa dada la interrupción de un rtimer (`struct rtimer *t)`. Para la planificación del rtimer se utiliza la funcion `static uint8_t tsch_schedule_slot_operation(struct rtimer *tm, rtimer_clock_t ref_time, rtimer_clock_t offset, const char *str)`...................
+En particular es de interés el módulo tsch-slot-operation.{h, c} donde se implementan las funciones vinculadas a la operación de los slots. Se define un thread principal `static PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr));` para operación de los slots, el cual se activa dada la interrupción de un rtimer (`struct rtimer *t)`. Para la planificación del rtimer se utiliza la funcion `static uint8_t tsch_schedule_slot_operation(struct rtimer *tm, rtimer_clock_t ref_time, rtimer_clock_t offset, const char *str)`................... (luego sigo)
 
 ### Driver para el sensor.
 
