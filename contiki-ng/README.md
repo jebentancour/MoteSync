@@ -76,4 +76,4 @@ static void user_interrupt_handler(gpio_hal_pin_mask_t pin_mask)
 }
 ```
 
-Al generarse una interrupción se llama a la función sensors_changed en la cual se hace un poll al proceso sensors_process, proceso principal del modulo *sensors*. Además se utiliza un timer para evitar detectar duplicados debido a un evento muy largo. 
+Al generarse una interrupción se llama a la función `sensors_changed` en la cual se hace un poll al proceso `sensors_process`, proceso principal del modulo *sensors*. Además se utiliza un timer para evitar detectar duplicados debido a un evento muy largo. 
