@@ -28,9 +28,11 @@ struct sensors_sensor {
 };
 ```
 
-De los miembros de esta estructura, los punteros a funciones *value*y *status* son opcionales. Para el sensor en cuestión no son necesarias, por lo que no se definen, y al definir el sensor con el macro SENSOR_SENSORS los argumentos value y status son NULL.
+De los miembros de esta estructura la funcion *status* es opcional. Para el sensor en cuestión no es necesaria, por lo que no se implementa, y al definir el sensor con el macro SENSOR_SENSORS el argumento status es NULL.
 
 La función *configure*, es llamada al inicializar (o desactivar) el sensor desde la aplicación con el macro SENSORS_ACTIVATE(sensor). Es aquí donde se realizan las configuraciones necesarias para generar interrupciones a partir de los flancos de bajada detectados en el pin C3.
+
+
 
 ```c
 static int
