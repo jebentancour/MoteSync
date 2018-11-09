@@ -53,7 +53,14 @@
 #include "net/mac/framer/framer-802154.h"
 #include "net/mac/tsch/tsch.h"
 
-#include "../examples/6tisch/udp-tsch/sync.h" //#include "../examples/udp-rpl-tsch/sync.h"
+
+/*---------------------------------------------------------------------------*/
+/*------------------------------- Variables ---------------------------------*/
+
+
+
+/*---------------------------------------------------------------------------*/
+
 
 #include "sys/log.h"
 /* TSCH debug macros, i.e. to set LEDs or GPIOs on various TSCH
@@ -293,6 +300,12 @@ tsch_schedule_slot_operation(struct rtimer *tm, rtimer_clock_t ref_time, rtimer_
   } else {
     r = rtimer_set(tm, ref_time + offset, 1, (void (*)(struct rtimer *, void *))tsch_slot_operation, NULL);
     if(r == RTIMER_OK) {
+    
+    /*
+    printf("Inicio slot (schedule_slot)");
+    printf("%" PRIu32 "\n",ref_time);
+    printf("\n");
+    */
       return 1;
     }
   }
@@ -945,9 +958,21 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
 {
   TSCH_DEBUG_INTERRUPT();
   PT_BEGIN(&slot_operation_pt);
-
+  extern uint32_t ref;
+  extern struct tsch_asn_t event_ASN;
   /* Loop over all active slots */
   while(tsch_is_associated) {
+    
+    /********************************************************/
+  ref= current_slot_start;
+  event_ASN = tsch_current_asn;
+  printf("Inicio slot ");
+  printf("%" PRIu32 "\n",ref);
+  printf("\n");
+  printf("ASN slot ");
+  printf("%" PRIu32 "\n",event_ASN.ls4b);
+  printf("\n");
+    /********************************************************/
 
     if(current_link == NULL || tsch_lock_requested) { /* Skip slot operation if there is no link
                                                           or if there is a pending request for getting the lock */
@@ -1063,9 +1088,7 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
             tsch_current_burst_count = 0;
           }
         }
-        SYNC(current_slot_start, tsch_current_asn);
         /* Update ASN */
-        
         TSCH_ASN_INC(tsch_current_asn, timeslot_diff);
         /* Time to next wake up */
         time_to_next_active_slot = timeslot_diff * tsch_timing[tsch_ts_timeslot_length] + drift_correction;
