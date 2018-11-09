@@ -6,7 +6,7 @@ En particular es de interés el módulo tsch-slot-operation.{h, c} donde se impl
 
 ### Driver para el sensor.
 
-El driver para el sensor se implementa en el módulo *user-sensor* (arch/zoul/dev/user-sensor.{c, h}). Además se modifcó el archivo arch/platform/zoul/dev/zoul-sensors.c para agregar el sensor de sonido. En este archivo, mediante el macro  `SENSORS`, se incluyen los sensores a la lista que maneja el módulo.
+El driver para el sensor se implementa en el módulo *user-sensor* (arch/zoul/dev/user-sensor.{c, h}). Además se modifcó el archivo arch/platform/zoul/dev/zoul-sensors.c para agregar el sensor de sonido. En este archivo, mediante el macro  `SENSORS`, se incluyen los sensores a la lista que maneja el módulo *sensors*.
 
 Se configura el pin C3 para generar interrupciones ante flancos de bajada. Estas interrupciones son manejadas por el módulo del sistema *sensors* (os/lib/sensors.{h,c}), desde donde se postea el evento a todos los procesos (`PROCESS_BROADCAST `) pasando como data el sensor.
 
