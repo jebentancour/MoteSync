@@ -77,16 +77,6 @@ PROCESS_THREAD(udp_client_process, ev, data)
     PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event && data == &user_sensor);
     data_user_sensor = get_data_sensor();
 
-	/**** Prints de debug  ****/
-    printf("\n");
-    printf("Inicio slot ");
-    printf("%lu \n",data_user_sensor.ref_time);
-    printf("\n");
-    printf("ASN slot ");
-    printf("%lu \n",data_user_sensor.asn_ls4b);
-    printf("\n");
-/***********************************************/
-
     if(NETSTACK_ROUTING.node_is_reachable() && NETSTACK_ROUTING.get_root_ipaddr(&dest_ipaddr)) {
       /* Send to DAG root */
       printf("Sending request %u to ", count);
