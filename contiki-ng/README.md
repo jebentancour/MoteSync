@@ -131,4 +131,4 @@ Luego se llama a la función sensors_changed en la cual se hace un poll al proce
 
 ### Programa de prueba del driver.
 
-Para probar el sensor se realizó un programa que consiste en un proceso que espera por un evento en el sensor (`PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event && data == &user_sensor);`), llama a la funcion ´get_data_sensor();´ e imprime el tiempo de ocurrencia de la interrupción.
+Para probar el sensor se realizó un programa que consiste en un proceso que espera por un evento en el sensor (`PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event && data == &user_sensor);`), llama a la funcion `get_data_sensor();` e imprime el tiempo de ocurrencia de la interrupción.
