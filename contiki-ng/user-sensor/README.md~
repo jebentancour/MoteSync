@@ -5,4 +5,4 @@ Copiar el Makefile.zoul en contiki-ng/arch/platform/zoul/
 
 En user-sensor.{c,h} esta la implementación del dirver.
 En zoul-sensors.c se modifica para agregar el sensor a la lista de sensores del mote.
-En Makefile.zoul se agrega el archivo fuente del driver.
+En Makefile.zoul se agrega el codigo fuente del driver.

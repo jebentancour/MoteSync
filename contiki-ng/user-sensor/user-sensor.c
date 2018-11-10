@@ -4,12 +4,12 @@
 *   Grupo: Bentancour, Cabrera, Díaz
 *
 *   path: $(CONTIKI)/arch/platform/zoul/dev/user-sensor.c
-*
+*   brief: Driver para el sensor de sonido.
 *   Basado en $(CONTIKI)/arch/platform/zoul/dev/motion-sensor.c
 *   
 */
 
-#include <stdio.h> // Probar sacarlo, donde se usa?
+
 #include "contiki.h"
 #include "dev/i2c.h"
 #include "dev/user-sensor.h"
@@ -18,11 +18,13 @@
 #include "dev/gpio.h"
 #include "dev/gpio-hal.h"
 #include "dev/ioc.h"
+#include "net/mac/tsch/tsch-asn.h" //Para el tipo struct tsch_asn_t
+#include "net/mac/tsch/tsch-sync.h" //Para las funciones get_asn y get_slot_start
 
 /*---------------------------------------------------------------------------*/
 
 /**
- * Timer para filtrar ecos ?
+ * Timer para filtrar
  */
 
 #define USER_SENSOR_FILTER_DURATION (CLOCK_SECOND >> 4)
@@ -31,23 +33,38 @@ static struct timer filtertimer;
 
 
 /*---------------------------------------------------------------------------*/
+static uint32_t event_time;
+static struct tsch_asn_t event_asn;
+
+/*---------------------------------------------------------------------------*/
 /** 
  * Pin para conexión del sensor.
  * 
  */
-#define USER_SENSOR_PORT       GPIO_C_NUM
-#define USER_SENSOR_PIN        3
-#define USER_SENSOR_VECTOR     GPIO_C_IRQn
-
 #define USER_SENSOR_PORT_BASE  GPIO_PORT_TO_BASE(USER_SENSOR_PORT)
 #define USER_SENSOR_PIN_MASK   GPIO_PIN_MASK(USER_SENSOR_PIN)
 
 /*---------------------------------------------------------------------------*/
 
+static struct data_sensor_t data_sensor;
+
+/*---------------------------------------------------------------------------*/
+/*
+ * Devuelve datos del ultimo evento
+ */
+struct data_sensor_t get_data_sensor(void){
+       return data_sensor;
+}
+
+/*---------------------------------------------------------------------------*/
+/*
+ * Handler para la interrupcion del sensor. Obtiene inicio y ASN del slot actual
+ * y tiempo de ocurrencia de la interrupcion.
+ */
 static void
 user_interrupt_handler(gpio_hal_pin_mask_t pin_mask)
 {
-
+  event_time = RTIMER_NOW();
   if(!timer_expired(&filtertimer))
   {
     return;
@@ -55,6 +72,11 @@ user_interrupt_handler(gpio_hal_pin_mask_t pin_mask)
   else
   {
 	timer_set(&filtertimer, USER_SENSOR_FILTER_DURATION);
+    data_sensor.ref_time = get_slot_start();
+    event_asn = get_asn();
+    data_sensor.asn_ls4b = event_asn.ls4b;
+    data_sensor.asn_ms1b = event_asn.ms1b;
+    data_sensor.event_time = event_time;
   	sensors_changed(&user_sensor);
   }
 }

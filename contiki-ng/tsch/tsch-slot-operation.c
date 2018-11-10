@@ -1,3 +1,28 @@
+/**
+*   Proyecto RSI - MoteSync
+*   Año: 2018
+*
+*   path: $(CONTIKI)/os/net/mac/tsch
+*
+*   Modificaciones respecto al original:
+*       + Se definen las variables para almacenar una copia de current_slot_start y tsch_current_ASN:
+*           - static uint32_t event_ref;            (linea 85)
+*           - static struct tsch_asn_t event_ASN;   (linea 86)
+*
+*       + Se incluye interfaz publica tsch-sync.h. (linea81)
+*
+*       + Se implementan las funciones de tsch-sync.h:
+*           - struct tsch_asn_t get_asn(void) (linea 219)
+*           - get_slot_start(void)            (linea 223)
+*
+*       + Se realiza copia de current_slot_start y tsch_current_ASN al inicio del slot (linea 1003)
+*               event_ref= current_slot_start;
+*               event_ASN = tsch_current_asn;
+*
+*/
+
+
+
 /*
  * Copyright (c) 2015, SICS Swedish ICT.
  * All rights reserved.
@@ -52,12 +77,13 @@
 #include "net/queuebuf.h"
 #include "net/mac/framer/framer-802154.h"
 #include "net/mac/tsch/tsch.h"
-
-
+#include "net/mac/tsch/tsch-conf.h"
+#include "net/mac/tsch/tsch-sync.h"
 /*---------------------------------------------------------------------------*/
 /*------------------------------- Variables ---------------------------------*/
 
-
+static uint32_t event_ref;
+static struct tsch_asn_t event_ASN;
 
 /*---------------------------------------------------------------------------*/
 
@@ -187,6 +213,16 @@ static struct pt slot_operation_pt;
 static PT_THREAD(tsch_tx_slot(struct pt *pt, struct rtimer *t));
 static PT_THREAD(tsch_rx_slot(struct pt *pt, struct rtimer *t));
 
+/*---------------------------------------------------------------------------*/
+/** Funciones del modulo tsch-sync.h para proyecto MoteSync
+ */
+struct tsch_asn_t get_asn(void){
+  return event_ASN;
+}
+
+uint32_t get_slot_start(void){
+  return event_ref;
+}
 /*---------------------------------------------------------------------------*/
 /* TSCH locking system. TSCH is locked during slot operations */
 
@@ -958,20 +994,21 @@ PT_THREAD(tsch_slot_operation(struct rtimer *t, void *ptr))
 {
   TSCH_DEBUG_INTERRUPT();
   PT_BEGIN(&slot_operation_pt);
-  extern uint32_t ref;
-  extern struct tsch_asn_t event_ASN;
   /* Loop over all active slots */
   while(tsch_is_associated) {
     
-    /********************************************************/
-  ref= current_slot_start;
+  /********************************************************/
+  /** Copia del inicio de slot y ASN actual
+  */
+  event_ref= current_slot_start;
   event_ASN = tsch_current_asn;
-  printf("Inicio slot ");
-  printf("%" PRIu32 "\n",ref);
-  printf("\n");
-  printf("ASN slot ");
-  printf("%" PRIu32 "\n",event_ASN.ls4b);
-  printf("\n");
+
+  /* Prints de debug
+  printf("ASN %lu \n",tsch_current_asn.ls4b);
+  printf("Inicio slot %lu\n",current_slot_start);
+  printf("Tiempo ahora %lu\n", RTIMER_NOW());
+  */
+  
     /********************************************************/
 
     if(current_link == NULL || tsch_lock_requested) { /* Skip slot operation if there is no link
