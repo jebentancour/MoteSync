@@ -55,9 +55,6 @@ udp_rx_callback(struct simple_udp_connection *c,
 {
   printf("Received response '%.*s' from ", datalen, (char *) data);
   uiplib_ipaddr_print(sender_addr);
- #if LLSEC802154_CONF_ENABLED
-  printf(" LLSEC LV:%d", uipbuf_get_attr(UIPBUF_ATTR_LLSEC_LEVEL)); 
-#endif
   printf("\n");
 
 }
