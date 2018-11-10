@@ -200,7 +200,7 @@ PROCESS_THREAD(node_process, ev, data)
 #endif /* WITH_TSCH */
 
   /* Print out routing tables every minute */
-  etimer_set(&print_timer, CLOCK_SECOND * 60);
+  etimer_set(&print_timer, CLOCK_SECOND * 10);
 
   etimer_set(&periodic_timer, SEND_INTERVAL);
 
@@ -223,7 +223,7 @@ PROCESS_THREAD(node_process, ev, data)
       /*-------------------------------------------*/
       /* SENDER                                    */
       /*-------------------------------------------*/
-      
+
       msg.id = 15;
       msg.x_pos = 0;
       msg.y_pos = 0;

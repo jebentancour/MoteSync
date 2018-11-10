@@ -226,7 +226,7 @@ void decoder_process(void)
 
 			for (base_delay = 0; base_delay < max_dist; base_delay++){
 				if (is_compatible(base_delay)){
-					printf("Event found!\n", base_delay);
+					printf("Event found!\n");
 					break;
 				}					
 			}
