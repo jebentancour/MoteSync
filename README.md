@@ -7,9 +7,9 @@ Detección del epicentro de una fuente de sonido con red de sensores inalámbric
 
 Para bajarse Contiki-NG, abrir una terminal y ejecutar:
 ```
-$ git clone git@github.com:contiki-ng/contiki-ng.git
-$ cd contiki-ng
-$ git submodule update --init --recursive
+git clone https://github.com/contiki-ng/contiki-ng.git
+cd contiki-ng
+git submodule update --init --recursive
 ```
 
 # Hola mundo
