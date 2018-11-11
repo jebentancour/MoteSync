@@ -10,10 +10,10 @@ Si no deja correr cambiarle permisos al archivos para que sea ejecutable corrien
 
 ```
 make clean
-
 make sender.upload MOTES=/dev/ttyUSB0 NODEID=0x0014
 make login BOARD=remote-revb MOTES=/dev/ttyUSB0
 
+make clean
 make receiver.upload MOTES=/dev/ttyUSB1 NODEID=0x0012
 make login MOTES=/dev/ttyUSB1
 ```
