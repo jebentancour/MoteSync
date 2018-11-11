@@ -9,14 +9,13 @@ Para ejecutar el script correr ``./compilar.sh`` en la terminal (estando en el d
 Si no deja correr cambiarle permisos al archivos para que sea ejecutable corriendo el comando ``chmod +x compilar.sh``.
 
 ```
-make TARGET=zoul savetarget
-sudo make clean BOARD=remote-revb
+make clean
 
-sudo make sender.upload BOARD=remote-revb WITH_TSCH=1 MOTES=/dev/ttyUSB0 NODEID=0x0014
-sudo make login BOARD=remote-revb MOTES=/dev/ttyUSB0
+make sender.upload MOTES=/dev/ttyUSB0 NODEID=0x0014
+make login BOARD=remote-revb MOTES=/dev/ttyUSB0
 
-sudo make receiver.upload BOARD=remote-revb WITH_TSCH=1 MOTES=/dev/ttyUSB1 NODEID=0x0012
-sudo make login BOARD=remote-revb MOTES=/dev/ttyUSB1
+make receiver.upload MOTES=/dev/ttyUSB1 NODEID=0x0012
+make login MOTES=/dev/ttyUSB1
 ```
 
 # Funcionamiento
